@@ -1,0 +1,43 @@
+name: Remove tests
+
+on:
+  workflow_call:
+    inputs:
+      src:
+        required: true
+        type: string
+      dst:
+        required: true
+        type: string
+      commit_msg:
+        type: string
+        default: "chore: add notests file"
+
+jobs:
+  remove-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Remove tests cases
+        run: |
+          mkdir -p "$(dirname ${{ inputs.dst }})"
+          sed '/<tc:testCases/,/<\/tc:testCases>/Id' ${{ inputs.src }} > ${{ inputs.dst }}
+
+      - name: Commit Results
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add ${{ inputs.dst }}
+
+          if ! git diff --quiet --staged; then
+            git commit -m "${{ inputs.commit_msg }}"
+            git push origin HEAD
+          else
+            echo "No changes to commit"
+          fi
