@@ -11,7 +11,7 @@ on:
         type: string
       commit_msg:
         type: string
-        default: "chore: add notests file"
+        default: "chore: add notests file [skip ci]"
 
 jobs:
   remove-tests:
@@ -20,7 +20,13 @@ jobs:
       contents: write
     steps:
       - name: Checkout code
+        if: github.event_name != 'pull_request'
         uses: actions/checkout@v5
+      - name: Checkout code
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.head_ref }}
 
       - name: Remove tests cases
         run: |
